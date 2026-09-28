@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zapkit — Free browser tools, no signup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#F5F3FF; --surface:#FFFFFF; --ink:#191A2C; --ink-soft:#6E6B8D;
+    --accent:#7C4DFF; --accent-ink:#FFFFFF; --teal:#00BFA6;
+    --border:#E4E0F7; --grid-line:rgba(124,77,255,0.055); --danger:#E5484D;
+    --font-display:'Space Grotesk',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#151225; --surface:#1F1B33; --ink:#F1EEFB; --ink-soft:#AFA9CC;
+      --accent:#A47CFF; --accent-ink:#151225; --teal:#3EE0C6;
+      --border:#332C4D; --grid-line:rgba(164,124,255,0.09);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#151225; --surface:#1F1B33; --ink:#F1EEFB; --ink-soft:#AFA9CC;
+    --accent:#A47CFF; --accent-ink:#151225; --teal:#3EE0C6;
+    --border:#332C4D; --grid-line:rgba(164,124,255,0.09);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:28px 28px;
+    min-height:100vh;
+  }
+  a{color:inherit;}
+  button, input, select{font-family:inherit;}
+  ::selection{background:var(--accent); color:var(--accent-ink);}
+
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+
+  /* Header */
+  header.site{
+    position:sticky; top:0; z-index:20; background:var(--bg);
+    border-bottom:1px solid var(--border);
+  }
+  .site-header-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 0; gap:20px; flex-wrap:wrap;
+  }
+  .logo{
+    font-family:var(--font-display); font-weight:700; font-size:22px;
+    letter-spacing:-0.02em; display:flex; align-items:center; gap:8px; text-decoration:none; color:var(--ink);
+  }
+  .logo .dot{width:9px; height:9px; background:var(--accent); border-radius:2px; display:inline-block;}
+  nav.site-nav{display:flex; gap:28px; align-items:center;}
+  nav.site-nav a{
+    text-decoration:none; color:var(--ink-soft); font-size:15px; font-weight:500;
+    padding:4px 2px; border-bottom:2px solid transparent; transition:border-color .15s, color .15s;
+  }
+  nav.site-nav a:hover, nav.site-nav a.active{color:var(--ink); border-color:var(--accent);}
+
+  /* Hero */
+  .hero{padding:64px 0 40px;}
+  .hero h1{
+    font-family:var(--font-display); font-size:clamp(34px,5.5vw,54px); line-height:1.08;
+    margin:0 0 18px; font-weight:700; letter-spacing:-0.02em; max-width:14ch;
+  }
+  .hero .underline-wrap{position:relative; display:inline-block;}
+  .hero .underline-wrap svg{position:absolute; left:-4px; right:-4px; bottom:-6px; width:calc(100% + 8px); height:14px; overflow:visible;}
+  .hero .underline-wrap path{
+    fill:none; stroke:var(--accent); stroke-width:6; stroke-linecap:round;
+    stroke-dasharray:400; stroke-dashoffset:400; animation:draw 0.9s ease-out 0.3s forwards;
+  }
+  @media (prefers-reduced-motion: reduce){ .hero .underline-wrap path{animation:none; stroke-dashoffset:0;} }
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  .hero p.sub{font-size:17px; color:var(--ink-soft); max-width:52ch; margin:0 0 28px; line-height:1.6;}
+
+  .search-box{
+    display:flex; align-items:center; gap:10px; background:var(--surface); border:1.5px solid var(--border);
+    border-radius:10px; padding:12px 16px; max-width:480px;
+  }
+  .search-box input{
+    border:none; outline:none; background:transparent; font-size:15px; color:var(--ink); width:100%;
+  }
+  .search-box svg{flex-shrink:0; opacity:0.5;}
+
+  /* Recently used */
+  .recent{margin-top:26px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .recent .label{font-size:12px; color:var(--ink-soft); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.06em;}
+  .recent a{
+    font-size:13px; text-decoration:none; color:var(--ink); background:var(--surface);
+    border:1px solid var(--border); padding:5px 10px; border-radius:6px;
+  }
+
+  /* Catalog */
+  .catalog{padding:20px 0 80px;}
+  .cat-group{margin-bottom:44px;}
+  .cat-group h2{
+    font-family:var(--font-mono); font-size:13px; letter-spacing:0.08em; color:var(--teal);
+    margin:0 0 16px; font-weight:500; display:flex; align-items:center; gap:12px;
+  }
+  .cat-group h2::after{content:""; flex:1; height:1px; background:var(--border);}
+  .tool-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:14px;}
+  .tool-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px;
+    text-decoration:none; color:var(--ink); display:flex; flex-direction:column; gap:10px;
+    transition:transform .12s ease, border-color .12s ease; position:relative;
+  }
+  .tool-card:hover{transform:translateY(-2px); border-color:var(--accent);}
+  .tool-num{
+    font-family:var(--font-mono); font-size:13px; color:var(--accent); font-weight:500; letter-spacing:.02em;
+  }
+  .tool-name{font-family:var(--font-display); font-size:17px; font-weight:600; letter-spacing:-0.01em;}
+  .tool-desc{font-size:13.5px; color:var(--ink-soft); line-height:1.5; margin:0;}
+  .tool-card.hidden{display:none;}
+
+  /* Tool page */
+  .tool-page{padding:36px 0 80px;}
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px; font-size:14px; color:var(--ink-soft);
+    text-decoration:none; margin-bottom:22px;
+  }
+  .back-link:hover{color:var(--ink);}
+  .tool-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px; flex-wrap:wrap;}
+  .tool-head .tool-num{font-size:15px;}
+  .tool-head h1{font-family:var(--font-display); font-size:30px; margin:0; font-weight:700; letter-spacing:-0.01em;}
+  .tool-page > .wrap > p.desc{color:var(--ink-soft); font-size:15px; margin:0 0 30px; max-width:60ch; line-height:1.6;}
+  .panel{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:26px; max-width:720px;
+  }
+  .field{margin-bottom:18px;}
+  .field label{display:block; font-size:13px; font-weight:600; margin-bottom:7px; color:var(--ink-soft);}
+  textarea, .panel input[type=text], .panel input[type=number], .panel select{
+    width:100%; border:1.5px solid var(--border); border-radius:8px; padding:10px 12px;
+    font-size:14.5px; background:var(--bg); color:var(--ink); outline:none;
+  }
+  textarea{min-height:130px; resize:vertical; font-family:var(--font-mono); line-height:1.5;}
+  textarea:focus, .panel input:focus, .panel select:focus{border-color:var(--accent);}
+  .row{display:flex; gap:12px; flex-wrap:wrap;}
+  .row > *{flex:1; min-width:140px;}
+  .btn{
+    background:var(--accent); color:var(--accent-ink); border:none; border-radius:8px; padding:11px 20px;
+    font-size:14.5px; font-weight:600; cursor:pointer; transition:opacity .12s;
+  }
+  .btn:hover{opacity:0.88;}
+  .btn:focus-visible, a:focus-visible, input:focus-visible, .tool-card:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .btn.ghost{background:transparent; border:1.5px solid var(--border); color:var(--ink);}
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;}
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); gap:12px; margin-top:18px;}
+  .stat{background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px;}
+  .stat .n{font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--accent);}
+  .stat .l{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .result-box{
+    margin-top:18px; background:var(--bg); border:1px dashed var(--border); border-radius:8px; padding:16px;
+    font-family:var(--font-mono); font-size:14px; word-break:break-word; white-space:pre-wrap; min-height:24px;
+  }
+  .swatch{width:100%; height:64px; border-radius:8px; border:1px solid var(--border); margin-bottom:14px;}
+  .drop{
+    border:1.5px dashed var(--border); border-radius:10px; padding:30px; text-align:center; cursor:pointer;
+    color:var(--ink-soft); font-size:14px; transition:border-color .12s, background .12s;
+  }
+  .drop:hover, .drop.drag{border-color:var(--accent); background:var(--bg);}
+  .drop input{display:none;}
+  .preview-img{max-width:100%; border-radius:8px; margin-top:14px; border:1px solid var(--border); display:none;}
+  .note{font-size:12.5px; color:var(--ink-soft); margin-top:10px; line-height:1.5;}
+  .copy-msg{font-size:12.5px; color:var(--teal); font-weight:600; margin-left:8px; opacity:0; transition:opacity .2s;}
+  .copy-msg.show{opacity:1;}
+  #qr-canvas-wrap{margin-top:16px;}
+  .badge{
+    display:inline-block; font-family:var(--font-mono); font-size:11px; padding:3px 8px; border-radius:5px;
+    background:var(--bg); border:1px solid var(--border); color:var(--ink-soft);
+  }
+
+  /* Static pages */
+  .static-page{padding:50px 0 80px; max-width:680px; margin:0 auto;}
+  .static-page h1{font-family:var(--font-display); font-size:32px; margin:0 0 22px;}
+  .static-page h2{font-family:var(--font-display); font-size:19px; margin:30px 0 10px;}
+  .static-page p, .static-page li{font-size:15px; line-height:1.7; color:var(--ink-soft);}
+  .static-page a{color:var(--teal); text-decoration:underline;}
+
+  footer{border-top:1px solid var(--border); padding:28px 0; margin-top:20px;}
+  .footer-inner{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
+  .footer-inner .flinks{display:flex; gap:20px; flex-wrap:wrap;}
+  .footer-inner a{font-size:13.5px; color:var(--ink-soft); text-decoration:none;}
+  .footer-inner a:hover{color:var(--ink);}
+  .footer-inner .copy{font-size:13px; color:var(--ink-soft); font-family:var(--font-mono);}
+
+  @media (max-width:640px){
+    .site-header-inner{padding:14px 0;}
+    nav.site-nav{gap:16px; width:100%; order:3;}
+    .hero{padding:40px 0 30px;}
+    .tool-grid{grid-template-columns:1fr 1fr;}
+    .panel{padding:18px;}
+  }
+  @media (max-width:420px){
+    .tool-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap site-header-inner">
+    <a href="#/" class="logo"><span class="dot"></span>Zapkit</a>
+    <nav class="site-nav">
+      <a href="#/" data-nav="/">Tools</a>
+      <a href="#/about" data-nav="/about">About</a>
+      <a href="#/contact" data-nav="/contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="copy">ZAPKIT © <span id="yr"></span></div>
+    <div class="flinks">
+      <a href="#/about">About</a>
+      <a href="#/privacy">Privacy Policy</a>
+      <a href="#/contact">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ---------- Tool registry ---------- */
+const CATEGORIES = [
+  {key:'text', label:'Text'},
+  {key:'image', label:'Image'},
+  {key:'convert', label:'Convert'},
+  {key:'utility', label:'Utility'},
+];
+
+const TOOLS = [
+  {id:'word-counter', num:'ZK-01', cat:'text', name:'Word & Character Counter', desc:'Count words, characters, sentences and reading time as you type.'},
+  {id:'case-converter', num:'ZK-02', cat:'text', name:'Case Converter', desc:'Switch text between UPPER, lower, Title and Sentence case.'},
+  {id:'text-reverser', num:'ZK-03', cat:'text', name:'Text Reverser', desc:'Flip text backwards, letter by letter or word by word.'},
+  {id:'lorem-ipsum', num:'ZK-04', cat:'text', name:'Lorem Ipsum Generator', desc:'Generate placeholder paragraphs, sentences or words.'},
+  {id:'image-compressor', num:'ZK-05', cat:'image', name:'Image Compressor', desc:'Shrink JPG or PNG file size right in your browser.'},
+  {id:'image-resizer', num:'ZK-06', cat:'image', name:'Image Resizer', desc:'Resize an image to exact pixel dimensions.'},
+  {id:'image-base64', num:'ZK-07', cat:'image', name:'Image to Base64', desc:'Convert an image into a Base64 data URI for code or CSS.'},
+  {id:'unit-converter', num:'ZK-08', cat:'convert', name:'Unit Converter', desc:'Convert length, weight and temperature between units.'},
+  {id:'color-converter', num:'ZK-09', cat:'convert', name:'Color Converter', desc:'Convert colors between HEX, RGB and HSL, with live preview.'},
+  {id:'qr-generator', num:'ZK-10', cat:'convert', name:'QR Code Generator', desc:'Turn any link or text into a downloadable QR code.'},
+  {id:'json-formatter', num:'ZK-11', cat:'convert', name:'JSON Formatter', desc:'Validate and pretty-print messy JSON.'},
+  {id:'password-generator', num:'ZK-12', cat:'utility', name:'Password Generator', desc:'Create strong random passwords with custom rules.'},
+  {id:'bmi-calculator', num:'ZK-13', cat:'utility', name:'BMI Calculator', desc:'Estimate body mass index from height and weight.'},
+  {id:'percentage-calculator', num:'ZK-14', cat:'utility', name:'Percentage Calculator', desc:'Work out percentages, increases and differences fast.'},
+];
+
+/* ---------- Recently used (localStorage, per-viewer only) ---------- */
+function getRecent(){
+  try{
+    const raw = localStorage.getItem('zapkit_recent');
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function pushRecent(id){
+  try{
+    let r = getRecent().filter(x => x !== id);
+    r.unshift(id);
+    r = r.slice(0,5);
+    localStorage.setItem('zapkit_recent', JSON.stringify(r));
+  }catch(e){ /* storage unavailable, ignore */ }
+}
+
+/* ---------- Router ---------- */
+const app = document.getElementById('app');
+
+function navActive(path){
+  document.querySelectorAll('nav.site-nav a').forEach(a=>{
+    a.classList.toggle('active', a.dataset.nav === path);
+  });
+}
+
+function route(){
+  const hash = location.hash.replace(/^#/, '') || '/';
+  if(hash === '/'){ navActive('/'); renderHome(); return; }
+  if(hash === '/about'){ navActive('/about'); renderStatic('about'); return; }
+  if(hash === '/privacy'){ navActive(''); renderStatic('privacy'); return; }
+  if(hash === '/contact'){ navActive('/contact'); renderStatic('contact'); return; }
+  const m = hash.match(/^\/tool\/([\w-]+)/);
+  if(m){
+    const tool = TOOLS.find(t => t.id === m[1]);
+    if(tool){ navActive(''); renderTool(tool); return; }
+  }
+  render404();
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- Home ---------- */
+function renderHome(){
+  const recent = getRecent().map(id => TOOLS.find(t=>t.id===id)).filter(Boolean);
+  app.innerHTML = `
+    <section class="hero wrap">
+      <h1>Free tools.<br><span class="underline-wrap">No signup.<svg viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M2 9 C 40 13, 160 13, 198 6"/></svg></span></h1>
+      <p class="sub">Fourteen small, fast utilities for text, images and everyday conversions. Everything runs in your browser — nothing you type or upload is sent anywhere.</p>
+      <div class="search-box">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="tool-search" placeholder="Search tools — try “image” or “password”" autocomplete="off">
+      </div>
+      ${recent.length ? `<div class="recent"><span class="label">Recently used</span>${recent.map(t=>`<a href="#/tool/${t.id}">${t.name}</a>`).join('')}</div>` : ''}
+    </section>
+    <section class="catalog wrap" id="catalog">
+      ${CATEGORIES.map(cat => `
+        <div class="cat-group" data-cat="${cat.key}">
+          <h2>${cat.label}</h2>
+          <div class="tool-grid">
+            ${TOOLS.filter(t=>t.cat===cat.key).map(t => `
+              <a class="tool-card" href="#/tool/${t.id}" data-name="${t.name.toLowerCase()}" data-desc="${t.desc.toLowerCase()}">
+                <span class="tool-num">${t.num}</span>
+                <span class="tool-name">${t.name}</span>
+                <p class="tool-desc">${t.desc}</p>
+              </a>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </section>
+  `;
+  const search = document.getElementById('tool-search');
+  search.addEventListener('input', () => {
+    const q = search.value.trim().toLowerCase();
+    document.querySelectorAll('.tool-card').forEach(card => {
+      const match = !q || card.dataset.name.includes(q) || card.dataset.desc.includes(q);
+      card.classList.toggle('hidden', !match);
+    });
+    document.querySelectorAll('.cat-group').forEach(group => {
+      const anyVisible = [...group.querySelectorAll('.tool-card')].some(c => !c.classList.contains('hidden'));
+      group.style.display = anyVisible ? '' : 'none';
+    });
+  });
+}
+
+function render404(){
+  app.innerHTML = `<div class="static-page wrap"><h1>Tool not found</h1><p>That page doesn't exist. <a href="#/">Back to all tools.</a></p></div>`;
+}
+
+/* ---------- Tool page shell ---------- */
+function renderTool(tool){
+  pushRecent(tool.id);
+  app.innerHTML = `
+    <div class="tool-page wrap">
+      <a href="#/" class="back-link">&larr; All tools</a>
+      <div class="tool-head"><span class="tool-num">${tool.num}</span><h1>${tool.name}</h1></div>
+      <p class="desc">${tool.desc}</p>
+      <div class="panel" id="tool-panel"></div>
+    </div>
+  `;
+  const panel = document.getElementById('tool-panel');
+  TOOL_RENDERERS[tool.id](panel);
+}
+
+/* ---------- Static pages ---------- */
+const STATIC_CONTENT = {
+  about: `
+    <h1>About Zapkit</h1>
+    <p>Zapkit is a small collection of everyday web tools — counters, converters and calculators — built to be fast, free and free of clutter. There's no account to create and no file ever leaves your device: every tool runs entirely in your browser using JavaScript already loaded on this page.</p>
+    <p>The idea is simple: you need a quick answer, not a ten-step signup flow. Open a tool, use it, close the tab.</p>
+    <h2>Why it's free</h2>
+    <p>Zapkit is supported by a small amount of on-page advertising, which keeps every tool free to use with no limits and no premium tier.</p>
+  `,
+  privacy: `
+    <h1>Privacy Policy</h1>
+    <p>Last updated: ${new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}</p>
+    <h2>How the tools work</h2>
+    <p>Every tool on Zapkit runs locally in your browser. Text you type and images you upload are processed on your own device using JavaScript — they are never uploaded to a server or stored by us.</p>
+    <h2>Cookies and advertising</h2>
+    <p>Zapkit may show ads served by Google AdSense. Google and its partners may use cookies or similar technology to serve ads based on your prior visits to this or other websites. You can opt out of personalized advertising through <a href="https://adssettings.google.com" target="_blank" rel="noopener">Google Ads Settings</a>.</p>
+    <h2>Local storage</h2>
+    <p>Zapkit may save a short list of your recently used tools in your browser's local storage, purely so it can show that list back to you. This stays on your device and is never sent anywhere.</p>
+    <h2>Analytics</h2>
+    <p>We may use basic, privacy-respecting analytics to understand which tools are useful, such as aggregate page-view counts. This data is not tied to your name or email.</p>
+    <h2>Contact</h2>
+    <p>Questions about this policy can be sent through the <a href="#/contact">Contact page</a>.</p>
+  `,
+  contact: `
+    <h1>Contact</h1>
+    <p>Found a bug, have a tool idea, or need to reach us about advertising or privacy? Send a note to:</p>
+    <p style="font-family:var(--font-mono); font-size:16px; color:var(--ink);">hello@zapkit.example</p>
+    <p>We read every message and try to reply within a few days.</p>
+  `
+};
+function renderStatic(key){
+  app.innerHTML = `<div class="static-page wrap">${STATIC_CONTENT[key]}</div>`;
+}
+
+/* ---------- Helpers ---------- */
+function copyToClipboard(text, btnEl){
+  navigator.clipboard?.writeText(text).then(()=>{
+    if(btnEl){
+      const msg = btnEl.nextElementSibling;
+      if(msg && msg.classList.contains('copy-msg')){
+        msg.classList.add('show');
+        setTimeout(()=>msg.classList.remove('show'), 1400);
+      }
+    }
+  }).catch(()=>{});
+}
+function esc(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ---------- Individual tool renderers ---------- */
+const TOOL_RENDERERS = {
+
+  'word-counter'(panel){
+    panel.innerHTML = `
+      <div class="field"><label>Your text</label><textarea id="wc-input" placeholder="Start typing or paste text here…"></textarea></div>
+      <div class="stat-grid">
+        <div class="stat"><div class="n" id="wc-words">0</div><div class="l">Words</div></div>
+        <div class="stat"><div class="n" id="wc-chars">0</div><div class="l">Characters</div></div>
+        <div class="stat"><div class="n" id="wc-sentences">0</div><div class="l">Sentences</div></div>
+        <div class="stat"><div class="n" id="wc-read">0s</div><div class="l">Reading time</div></div>
+      </div>
+    `;
+    const input = panel.querySelector('#wc-input');
+    input.addEventListener('input', () => {
+      const text = input.value;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      const sentences = text.trim() ? (text.match(/[.!?]+(\s|$)/g) || []).length || (text.trim() ? 1 : 0) : 0;
+      const seconds = Math.round((words / 200) * 60);
+      panel.querySelector('#wc-words').textContent = words;
+      panel.querySelector('#wc-chars').textContent = chars;
+      panel.querySelector('#wc-sentences').textContent = sentences;
+      panel.querySelector('#wc-read').textContent = seconds < 60 ? seconds+'s' : Math.round(seconds/60)+'m';
+    });
+  },
+
+  'case-converter'(panel){
+    panel.innerHTML = `
+      <div class="field"><label>Your text</label><textarea id="cc-input" placeholder="Type or paste text…"></textarea></div>
+      <div class="btn-row">
+        <button class="btn" data-mode="upper">UPPERCASE</button>
+        <button class="btn" data-mode="lower">lowercase</button>
+        <button class="btn" data-mode="title">Title Case</button>
+        <button class="btn" data-mode="sentence">Sentence case</button>
+      </div>
+      <div class="result-box" id="cc-output">Result will appear here.</div>
+      <div class="btn-row"><button class="btn ghost" id="cc-copy">Copy result</button><span class="copy-msg">Copied</span></div>
+    `;
+    const input = panel.querySelector('#cc-input');
+    const output = panel.querySelector('#cc-output');
+    panel.querySelectorAll('[data-mode]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const t = input.value;
+        let r = t;
+        if(btn.dataset.mode==='upper') r = t.toUpperCase();
+        if(btn.dataset.mode==='lower') r = t.toLowerCase();
+        if(btn.dataset.mode==='title') r = t.replace(/\w\S*/g, w => w[0].toUpperCase()+w.slice(1).toLowerCase());
+        if(btn.dataset.mode==='sentence') r = t.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
+        output.textContent = r || 'Result will appear here.';
+      });
+    });
+    panel.querySelector('#cc-copy').addEventListener('click', (e)=>copyToClipboard(output.textContent, e.target));
+  },
+
+  'text-reverser'(panel){
+    panel.innerHTML = `
+      <div class="field"><label>Your text</label><textarea id="tr-input" placeholder="Type or paste text…"></textarea></div>
+      <div class="btn-row">
+        <button class="btn" id="tr-chars">Reverse letters</button>
+        <button class="btn ghost" id="tr-words">Reverse word order</button>
+      </div>
+      <div class="result-box" id="tr-output">Result will appear here.</div>
+      <div class="btn-row"><button class="btn ghost" id="tr-copy">Copy result</button><span class="copy-msg">Copied</span></div>
+    `;
+    const input = panel.querySelector('#tr-input');
+    const output = panel.querySelector('#tr-output');
+    panel.querySelector('#tr-chars').addEventListener('click', ()=> output.textContent = input.value.split('').reverse().join('') || 'Result will appear here.');
+    panel.querySelector('#tr-words').addEventListener('click', ()=> output.textContent = input.value.split(/\s+/).reverse().join(' ') || 'Result will appear here.');
+    panel.querySelector('#tr-copy').addEventListener('click', (e)=>copyToClipboard(output.textContent, e.target));
+  },
+
+  'lorem-ipsum'(panel){
+    const words = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum".split(' ');
+    function genSentence(){
+      const len = 6 + Math.floor(Math.random()*8);
+      let s = [];
+      for(let i=0;i<len;i++) s.push(words[Math.floor(Math.random()*words.length)]);
+      s[0] = s[0][0].toUpperCase()+s[0].slice(1);
+      return s.join(' ') + '.';
+    }
+    function genParagraph(){
+      const n = 3 + Math.floor(Math.random()*3);
+      return Array.from({length:n}, genSentence).join(' ');
+    }
+    panel.innerHTML = `
+      <div class="row">
+        <div class="field"><label>Generate</label>
+          <select id="li-type"><option value="paragraphs">Paragraphs</option><option value="sentences">Sentences</option><option value="words">Words</option></select>
+        </div>
+        <div class="field"><label>How many</label><input type="number" id="li-count" value="3" min="1" max="50"></div>
+      </div>
+      <div class="btn-row"><button class="btn" id="li-generate">Generate</button></div>
+      <div class="result-box" id="li-output">Result will appear here.</div>
+      <div class="btn-row"><button class="btn ghost" id="li-copy">Copy result</button><span class="copy-msg">Copied</span></div>
+    `;
+    const output = panel.querySelector('#li-output');
+    panel.querySelector('#li-generate').addEventListener('click', ()=>{
+      const type = panel.querySelector('#li-type').value;
+      const count = Math.max(1, Math.min(50, parseInt(panel.querySelector('#li-count').value)||1));
+      let r = '';
+      if(type==='paragraphs') r = Array.from({length:count}, genParagraph).join('\n\n');
+      if(type==='sentences') r = Array.from({length:count}, genSentence).join(' ');
+      if(type==='words') r = Array.from({length:count}, ()=>words[Math.floor(Math.random()*words.length)]).join(' ');
+      output.textContent = r;
+    });
+    panel.querySelector('#li-copy').addEventListener('click', (e)=>copyToClipboard(output.textContent, e.target));
+  },
+
+  'image-compressor'(panel){
+    panel.innerHTML = `
+      <div class="drop" id="ic-drop">Click to choose an image, or drag one here<input type="file" id="ic-file" accept="image/*"></div>
+      <img class="preview-img" id="ic-preview">
+      <div class="field" style="margin-top:18px;"><label>Quality: <span id="ic-q-val">75</span>%</label>
+        <input type="range" id="ic-quality" min="10" max="100" value="75" style="width:100%;">
+      </div>
+      <div class="btn-row"><button class="btn" id="ic-compress" disabled>Compress</button></div>
+      <div class="stat-grid" id="ic-stats" style="display:none;">
+        <div class="stat"><div class="n" id="ic-before">–</div><div class="l">Original</div></div>
+        <div class="stat"><div class="n" id="ic-after">–</div><div class="l">Compressed</div></div>
+        <div class="stat"><div class="n" id="ic-saved">–</div><div class="l">Saved</div></div>
+      </div>
+      <div class="btn-row" id="ic-dl-row" style="display:none;"><a class="btn" id="ic-download" download="compressed.jpg">Download compressed image</a></div>
+      <p class="note">Processed entirely in your browser — the image is never uploaded.</p>
+    `;
+    let img = null, origSize = 0, origName = 'image';
+    const drop = panel.querySelector('#ic-drop'), file = panel.querySelector('#ic-file'), preview = panel.querySelector('#ic-preview');
+    const qSlider = panel.querySelector('#ic-quality'), qVal = panel.querySelector('#ic-q-val');
+    const compressBtn = panel.querySelector('#ic-compress');
+    drop.addEventListener('click', ()=>file.click());
+    ['dragover','dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.classList.toggle('drag', ev==='dragover');}));
+    drop.addEventListener('drop', e=>{ if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+    file.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+    function handleFile(f){
+      origSize = f.size; origName = f.name.replace(/\.[^.]+$/,'');
+      const reader = new FileReader();
+      reader.onload = e => {
+        img = new Image();
+        img.onload = () => { preview.src = e.target.result; preview.style.display='block'; compressBtn.disabled = false; };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(f);
+    }
+    qSlider.addEventListener('input', ()=> qVal.textContent = qSlider.value);
+    compressBtn.addEventListener('click', ()=>{
+      if(!img) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width; canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img,0,0);
+      const dataUrl = canvas.toDataURL('image/jpeg', qSlider.value/100);
+      const newSize = Math.round((dataUrl.length - 'data:image/jpeg;base64,'.length) * 3/4);
+      panel.querySelector('#ic-before').textContent = (origSize/1024).toFixed(0)+' KB';
+      panel.querySelector('#ic-after').textContent = (newSize/1024).toFixed(0)+' KB';
+      panel.querySelector('#ic-saved').textContent = Math.max(0, Math.round(100 - (newSize/origSize*100)))+'%';
+      panel.querySelector('#ic-stats').style.display = '';
+      const dl = panel.querySelector('#ic-download');
+      dl.href = dataUrl; dl.download = origName+'-compressed.jpg';
+      panel.querySelector('#ic-dl-row').style.display = '';
+    });
+  },
+
+  'image-resizer'(panel){
+    panel.innerHTML = `
+      <div class="drop" id="ir-drop">Click to choose an image, or drag one here<input type="file" id="ir-file" accept="image/*"></div>
+      <img class="preview-img" id="ir-preview">
+      <div class="row" style="margin-top:18px;">
+        <div class="field"><label>Width (px)</label><input type="number" id="ir-w"></div>
+        <div class="field"><label>Height (px)</label><input type="number" id="ir-h"></div>
+      </div>
+      <div class="field"><label><input type="checkbox" id="ir-lock" checked style="width:auto; margin-right:6px;">Lock aspect ratio</label></div>
+      <div class="btn-row"><button class="btn" id="ir-resize" disabled>Resize</button></div>
+      <div class="btn-row" id="ir-dl-row" style="display:none;"><a class="btn ghost" id="ir-download" download="resized.png">Download resized image</a></div>
+      <p class="note">Processed entirely in your browser — the image is never uploaded.</p>
+    `;
+    let img = null, ratio = 1, origName = 'image';
+    const drop = panel.querySelector('#ir-drop'), file = panel.querySelector('#ir-file'), preview = panel.querySelector('#ir-preview');
+    const wIn = panel.querySelector('#ir-w'), hIn = panel.querySelector('#ir-h'), lock = panel.querySelector('#ir-lock');
+    const resizeBtn = panel.querySelector('#ir-resize');
+    drop.addEventListener('click', ()=>file.click());
+    ['dragover','dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.classList.toggle('drag', ev==='dragover');}));
+    drop.addEventListener('drop', e=>{ if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+    file.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+    function handleFile(f){
+      origName = f.name.replace(/\.[^.]+$/,'');
+      const reader = new FileReader();
+      reader.onload = e => {
+        img = new Image();
+        img.onload = () => {
+          preview.src = e.target.result; preview.style.display='block';
+          wIn.value = img.width; hIn.value = img.height; ratio = img.width/img.height;
+          resizeBtn.disabled = false;
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(f);
+    }
+    wIn.addEventListener('input', ()=>{ if(lock.checked && img) hIn.value = Math.round(wIn.value / ratio); });
+    hIn.addEventListener('input', ()=>{ if(lock.checked && img) wIn.value = Math.round(hIn.value * ratio); });
+    resizeBtn.addEventListener('click', ()=>{
+      if(!img) return;
+      const w = parseInt(wIn.value)||img.width, h = parseInt(hIn.value)||img.height;
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const dataUrl = canvas.toDataURL('image/png');
+      const dl = panel.querySelector('#ir-download');
+      dl.href = dataUrl; dl.download = origName+'-resized.png';
+      panel.querySelector('#ir-dl-row').style.display = '';
+    });
+  },
+
+  'image-base64'(panel){
+    panel.innerHTML = `
+      <div class="drop" id="ib-drop">Click to choose an image, or drag one here<input type="file" id="ib-file" accept="image/*"></div>
+      <img class="preview-img" id="ib-preview">
+      <div class="result-box" id="ib-output" style="max-height:160px; overflow:auto; margin-top:18px;">Base64 output will appear here.</div>
+      <div class="btn-row"><button class="btn ghost" id="ib-copy">Copy Base64</button><span class="copy-msg">Copied</span></div>
+      <p class="note">Processed entirely in your browser — the image is never uploaded.</p>
+    `;
+    const drop = panel.querySelector('#ib-drop'), file = panel.querySelector('#ib-file'), preview = panel.querySelector('#ib-preview'), output = panel.querySelector('#ib-output');
+    drop.addEventListener('click', ()=>file.click());
+    ['dragover','dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.classList.toggle('drag', ev==='dragover');}));
+    drop.addEventListener('drop', e=>{ if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+    file.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+    function handleFile(f){
+      const reader = new FileReader();
+      reader.onload = e => { preview.src = e.target.result; preview.style.display='block'; output.textContent = e.target.result; };
+      reader.readAsDataURL(f);
+    }
+    panel.querySelector('#ib-copy').addEventListener('click', (e)=>copyToClipboard(output.textContent, e.target));
+  },
+
+  'unit-converter'(panel){
+    const UNITS = {
+      length:{m:1, km:1000, cm:0.01, mm:0.001, mile:1609.344, yard:0.9144, foot:0.3048, inch:0.0254},
+      weight:{kg:1, g:0.001, mg:0.000001, lb:0.453592, oz:0.0283495, ton:1000},
+      temperature:null
+    };
+    panel.innerHTML = `
+      <div class="field"><label>Category</label>
+        <select id="uc-cat"><option value="length">Length</option><option value="weight">Weight</option><option value="temperature">Temperature</option></select>
+      </div>
+      <div class="row">
+        <div class="field"><label>From</label><input type="number" id="uc-val" value="1"></div>
+        <div class="field"><label></label><select id="uc-from"></select></div>
+        <div class="field"><label></label><select id="uc-to"></select></div>
+      </div>
+      <div class="result-box" id="uc-output">Result will appear here.</div>
+    `;
+    const cat = panel.querySelector('#uc-cat'), val = panel.querySelector('#uc-val'), from = panel.querySelector('#uc-from'), to = panel.querySelector('#uc-to'), out = panel.querySelector('#uc-output');
+    function fillUnits(){
+      let opts;
+      if(cat.value==='temperature') opts = ['celsius','fahrenheit','kelvin'];
+      else opts = Object.keys(UNITS[cat.value]);
+      from.innerHTML = opts.map(o=>`<option value="${o}">${o}</option>`).join('');
+      to.innerHTML = opts.map((o,i)=>`<option value="${o}" ${i===1?'selected':''}>${o}</option>`).join('');
+      compute();
+    }
+    function toCelsius(v,u){ if(u==='celsius') return v; if(u==='fahrenheit') return (v-32)*5/9; return v-273.15; }
+    function fromCelsius(v,u){ if(u==='celsius') return v; if(u==='fahrenheit') return v*9/5+32; return v+273.15; }
+    function compute(){
+      const v = parseFloat(val.value); if(isNaN(v)){ out.textContent='Enter a number.'; return; }
+      let result;
+      if(cat.value==='temperature'){
+        result = fromCelsius(toCelsius(v, from.value), to.value);
+      } else {
+        const table = UNITS[cat.value];
+        result = v * table[from.value] / table[to.value];
+      }
+      out.textContent = `${v} ${from.value} = ${Number(result.toFixed(6))} ${to.value}`;
+    }
+    cat.addEventListener('change', fillUnits);
+    [val,from,to].forEach(el=>el.addEventListener('input', compute));
+    fillUnits();
+  },
+
+  'color-converter'(panel){
+    panel.innerHTML = `
+      <div class="swatch" id="cv-swatch"></div>
+      <div class="field"><label>HEX</label><input type="text" id="cv-hex" value="#FF6B35"></div>
+      <div class="row">
+        <div class="field"><label>RGB</label><input type="text" id="cv-rgb" readonly></div>
+        <div class="field"><label>HSL</label><input type="text" id="cv-hsl" readonly></div>
+      </div>
+      <input type="color" id="cv-picker" value="#FF6B35" style="width:100%; height:44px; border:1.5px solid var(--border); border-radius:8px; background:var(--bg); cursor:pointer;">
+    `;
+    const hex = panel.querySelector('#cv-hex'), rgbOut = panel.querySelector('#cv-rgb'), hslOut = panel.querySelector('#cv-hsl'), swatch = panel.querySelector('#cv-swatch'), picker = panel.querySelector('#cv-picker');
+    function hexToRgb(h){
+      h = h.replace('#','');
+      if(h.length===3) h = h.split('').map(c=>c+c).join('');
+      const num = parseInt(h,16);
+      return {r:(num>>16)&255, g:(num>>8)&255, b:num&255};
+    }
+    function rgbToHsl(r,g,b){
+      r/=255; g/=255; b/=255;
+      const max=Math.max(r,g,b), min=Math.min(r,g,b); let h,s,l=(max+min)/2;
+      if(max===min){ h=s=0; } else {
+        const d = max-min; s = l>0.5 ? d/(2-max-min) : d/(max+min);
+        switch(max){ case r: h=(g-b)/d+(g<b?6:0); break; case g: h=(b-r)/d+2; break; default: h=(r-g)/d+4; }
+        h/=6;
+      }
+      return {h:Math.round(h*360), s:Math.round(s*100), l:Math.round(l*100)};
+    }
+    function update(){
+      let h = hex.value.trim();
+      if(!/^#?[0-9A-Fa-f]{3}$|^#?[0-9A-Fa-f]{6}$/.test(h)) return;
+      if(!h.startsWith('#')) h = '#'+h;
+      const {r,g,b} = hexToRgb(h);
+      const {h:hh,s,l} = rgbToHsl(r,g,b);
+      rgbOut.value = `rgb(${r}, ${g}, ${b})`;
+      hslOut.value = `hsl(${hh}, ${s}%, ${l}%)`;
+      swatch.style.background = h; picker.value = h.length===4 ? '#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3] : h;
+    }
+    hex.addEventListener('input', update);
+    picker.addEventListener('input', ()=>{ hex.value = picker.value; update(); });
+    update();
+  },
+
+  'qr-generator'(panel){
+    panel.innerHTML = `
+      <div class="field"><label>Text or URL</label><input type="text" id="qr-input" placeholder="https://example.com" value="https://zapkit.example"></div>
+      <div class="btn-row"><button class="btn" id="qr-make">Generate QR code</button></div>
+      <div id="qr-canvas-wrap"></div>
+      <div class="btn-row" id="qr-dl-row" style="display:none;"><a class="btn ghost" id="qr-download" download="qrcode.png">Download PNG</a></div>
+    `;
+    const wrap = panel.querySelector('#qr-canvas-wrap');
+    function make(){
+      wrap.innerHTML = '';
+      const text = panel.querySelector('#qr-input').value.trim() || 'https://zapkit.example';
+      if(typeof QRCode === 'undefined'){ wrap.innerHTML = '<p class="note">QR library failed to load.</p>'; return; }
+      new QRCode(wrap, {text, width:200, height:200, colorDark:'#1C2321', colorLight:'#ffffff'});
+      setTimeout(()=>{
+        const canvas = wrap.querySelector('canvas');
+        if(canvas){
+          panel.querySelector('#qr-download').href = canvas.toDataURL('image/png');
+          panel.querySelector('#qr-dl-row').style.display = '';
+        }
+      }, 120);
+    }
+    panel.querySelector('#qr-make').addEventListener('click', make);
+    make();
+  },
+
+  'json-formatter'(panel){
+    panel.innerHTML = `
+      <div class="field"><label>Paste JSON</label><textarea id="jf-input" placeholder='{"example": true}'></textarea></div>
+      <div class="btn-row"><button class="btn" id="jf-format">Format & validate</button><button class="btn ghost" id="jf-minify">Minify</button></div>
+      <div class="result-box" id="jf-output">Result will appear here.</div>
+      <div class="btn-row"><button class="btn ghost" id="jf-copy">Copy result</button><span class="copy-msg">Copied</span></div>
+    `;
+    const input = panel.querySelector('#jf-input'), output = panel.querySelector('#jf-output');
+    function run(minify){
+      try{
+        const parsed = JSON.parse(input.value);
+        output.textContent = minify ? JSON.stringify(parsed) : JSON.stringify(parsed, null, 2);
+        output.style.color = 'var(--ink)';
+      }catch(err){
+        output.textContent = 'Invalid JSON: ' + err.message;
+        output.style.color = 'var(--danger)';
+      }
+    }
+    panel.querySelector('#jf-format').addEventListener('click', ()=>run(false));
+    panel.querySelector('#jf-minify').addEventListener('click', ()=>run(true));
+    panel.querySelector('#jf-copy').addEventListener('click', (e)=>copyToClipboard(output.textContent, e.target));
+  },
+
+  'password-generator'(panel){
+    panel.innerHTML = `
+      <div class="field"><label>Length: <span id="pg-len-val">16</span></label><input type="range" id="pg-len" min="6" max="48" value="16" style="width:100%;"></div>
+      <div class="row">
+        <div class="field"><label><input type="checkbox" id="pg-upper" checked style="width:auto; margin-right:6px;">Uppercase</label></div>
+        <div class="field"><label><input type="checkbox" id="pg-lower" checked style="width:auto; margin-right:6px;">Lowercase</label></div>
+      </div>
+      <div class="row">
+        <div class="field"><label><input type="checkbox" id="pg-num" checked style="width:auto; margin-right:6px;">Numbers</label></div>
+        <div class="field"><label><input type="checkbox" id="pg-sym" style="width:auto; margin-right:6px;">Symbols</label></div>
+      </div>
+      <div class="btn-row"><button class="btn" id="pg-generate">Generate password</button></div>
+      <div class="result-box" id="pg-output" style="font-size:17px;">Click generate.</div>
+      <div class="btn-row"><button class="btn ghost" id="pg-copy">Copy password</button><span class="copy-msg">Copied</span></div>
+    `;
+    const len = panel.querySelector('#pg-len'), lenVal = panel.querySelector('#pg-len-val'), out = panel.querySelector('#pg-output');
+    len.addEventListener('input', ()=> lenVal.textContent = len.value);
+    panel.querySelector('#pg-generate').addEventListener('click', ()=>{
+      let chars = '';
+      if(panel.querySelector('#pg-upper').checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      if(panel.querySelector('#pg-lower').checked) chars += 'abcdefghijklmnopqrstuvwxyz';
+      if(panel.querySelector('#pg-num').checked) chars += '0123456789';
+      if(panel.querySelector('#pg-sym').checked) chars += '!@#$%^&*()_+-=[]{}';
+      if(!chars){ out.textContent = 'Select at least one character type.'; return; }
+      const n = parseInt(len.value);
+      const arr = new Uint32Array(n);
+      crypto.getRandomValues(arr);
+      let pass = '';
+      for(let i=0;i<n;i++) pass += chars[arr[i] % chars.length];
+      out.textContent = pass;
+    });
+    panel.querySelector('#pg-copy').addEventListener('click', (e)=>copyToClipboard(out.textContent, e.target));
+  },
+
+  'bmi-calculator'(panel){
+    panel.innerHTML = `
+      <div class="row">
+        <div class="field"><label>Height (cm)</label><input type="number" id="bmi-h" value="170"></div>
+        <div class="field"><label>Weight (kg)</label><input type="number" id="bmi-w" value="65"></div>
+      </div>
+      <div class="btn-row"><button class="btn" id="bmi-calc">Calculate BMI</button></div>
+      <div class="result-box" id="bmi-output">Result will appear here.</div>
+      <p class="note">BMI is a general screening measure, not a diagnosis. Talk to a doctor for personal health advice.</p>
+    `;
+    panel.querySelector('#bmi-calc').addEventListener('click', ()=>{
+      const h = parseFloat(panel.querySelector('#bmi-h').value)/100;
+      const w = parseFloat(panel.querySelector('#bmi-w').value);
+      const out = panel.querySelector('#bmi-output');
+      if(!h || !w){ out.textContent = 'Enter height and weight.'; return; }
+      const bmi = w/(h*h);
+      let cat = 'Underweight';
+      if(bmi>=18.5 && bmi<25) cat='Normal weight';
+      else if(bmi>=25 && bmi<30) cat='Overweight';
+      else if(bmi>=30) cat='Obese';
+      out.textContent = `BMI: ${bmi.toFixed(1)} — ${cat}`;
+    });
+  },
+
+  'percentage-calculator'(panel){
+    panel.innerHTML = `
+      <div class="field"><label>Calculation type</label>
+        <select id="pc-type">
+          <option value="of">X% of Y</option>
+          <option value="isWhat">X is what % of Y</option>
+          <option value="change">% change from X to Y</option>
+        </select>
+      </div>
+      <div class="row">
+        <div class="field"><label id="pc-label-x">X</label><input type="number" id="pc-x" value="20"></div>
+        <div class="field"><label id="pc-label-y">Y</label><input type="number" id="pc-y" value="150"></div>
+      </div>
+      <div class="result-box" id="pc-output">Result will appear here.</div>
+    `;
+    const type = panel.querySelector('#pc-type'), x = panel.querySelector('#pc-x'), y = panel.querySelector('#pc-y'), out = panel.querySelector('#pc-output');
+    function compute(){
+      const xv = parseFloat(x.value), yv = parseFloat(y.value);
+      if(isNaN(xv) || isNaN(yv)){ out.textContent = 'Enter both numbers.'; return; }
+      if(type.value==='of') out.textContent = `${xv}% of ${yv} = ${(xv/100*yv).toFixed(2)}`;
+      if(type.value==='isWhat') out.textContent = `${xv} is ${(xv/yv*100).toFixed(2)}% of ${yv}`;
+      if(type.value==='change') out.textContent = `Change from ${xv} to ${yv} = ${(((yv-xv)/xv)*100).toFixed(2)}%`;
+    }
+    type.addEventListener('change', compute);
+    [x,y].forEach(el=>el.addEventListener('input', compute));
+    compute();
+  },
+};
+
+route();
+</script>
+</body>
+</html>
